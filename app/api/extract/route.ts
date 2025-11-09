@@ -11,24 +11,24 @@ async function embedTexts(texts: string[]) {
   // Prefer Gemini/Google embeddings if endpoint/key provided, otherwise fall back to OpenAI
   const geminiKey = process.env.GEMINI_API_KEY;
   const geminiEndpoint = process.env.GEMINI_EMBED_ENDPOINT; // fully qualified URL
-  const geminiModel = process.env.GEMINI_MODEL;
 
   if (!geminiKey || !geminiEndpoint) {
     throw new Error('GEMINI_API_KEY and GEMINI_EMBED_ENDPOINT must be set to use Gemini embeddings');
   }
 
   if (geminiKey && geminiEndpoint) {
-    const res = await fetch(geminiEndpoint, {
+    // Gemini API uses API key as query parameter, not Bearer token
+    const urlWithKey = `${geminiEndpoint}?key=${geminiKey}`;
+    
+    const res = await fetch(urlWithKey, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${geminiKey}`,
       },
       body: JSON.stringify({
-        // Many Gemini/Vertex-style endpoints expect either `input` or `instances`/`inputs`.
-        // Allow configuring the model name if required by the endpoint.
-        model: geminiModel,
-        input: texts,
+        content: {
+          parts: [{ text: texts.join('\n') }]
+        }
       }),
     });
 
@@ -39,6 +39,12 @@ async function embedTexts(texts: string[]) {
 
     const j = await res.json();
 
+    // Gemini API returns: { embedding: { values: [...] } }
+    if (j?.embedding?.values && Array.isArray(j.embedding.values)) {
+      // Return array of embeddings for each text (currently combined, may need batch processing)
+      return [j.embedding.values as number[]];
+    }
+    
     // Support multiple response shapes (best-effort):
     // - { data: [{ embedding: [...] }, ...] } (OpenAI-like)
     // - { embeddings: [[...], ...] }
