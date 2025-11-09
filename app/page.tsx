@@ -6,11 +6,11 @@ export default function Home() {
       <section className="bg-linear-to-b from-white to-slate-50 p-8 rounded-2xl shadow">
         <h1 className="text-4xl font-bold text-indigo-600">SkillSense AI</h1>
         <p className="mt-3 text-lg text-gray-700">
-          🚀 Advanced AI-Powered Resume Parser
+          🚀 AI-Powered Resume Parser - Extracts Skills Directly from Your Text
         </p>
         <p className="mt-2 text-gray-600">
-          Copy-paste your resume text below and let our AI extract all technical and soft skills 
-          with confidence scores. Perfect for job applications, skill gap analysis, and career planning.
+          Copy-paste your resume and our AI will intelligently identify ALL skills mentioned - 
+          no predefined lists, just pure AI analysis of your actual experience!
         </p>
       </section>
 
