@@ -4,10 +4,13 @@ export default function Home() {
   return (
     <div className="space-y-8">
       <section className="bg-linear-to-b from-white to-slate-50 p-8 rounded-2xl shadow">
-        <h1 className="text-3xl font-bold">SkillSense</h1>
+        <h1 className="text-4xl font-bold text-indigo-600">SkillSense AI</h1>
+        <p className="mt-3 text-lg text-gray-700">
+          🚀 Advanced AI-Powered Resume Parser
+        </p>
         <p className="mt-2 text-gray-600">
-          Upload a resume or paste profile text — SkillSense will extract explicit and
-          implicit skills with confidence scores.
+          Copy-paste your resume text below and let our AI extract all technical and soft skills 
+          with confidence scores. Perfect for job applications, skill gap analysis, and career planning.
         </p>
       </section>
 
@@ -15,8 +18,14 @@ export default function Home() {
         <UploadBox />
       </section>
 
-      <section className="text-sm text-gray-500">
-        Tip: For best results paste long descriptive experience paragraphs (projects, responsibilities).
+      <section className="bg-blue-50 p-6 rounded-xl border border-blue-100">
+        <h3 className="font-semibold text-blue-900 mb-2">💡 Tips for Best Results:</h3>
+        <ul className="list-disc list-inside text-sm text-blue-800 space-y-1">
+          <li>Include detailed work experience, project descriptions, and responsibilities</li>
+          <li>Paste complete resume sections (Summary, Experience, Projects, Education)</li>
+          <li>More context = better skill detection and accuracy</li>
+          <li>Adjust the threshold slider to control sensitivity (lower = more skills detected)</li>
+        </ul>
       </section>
     </div>
   );

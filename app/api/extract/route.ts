@@ -1,11 +1,16 @@
 import { NextResponse } from "next/server";
 import SKILLS from "../../../lib/skills";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 type RequestBody = { text: string; threshold?: number };
 
 let cachedSkillEmbeddings: number[][] | null = null;
+
+// Rate limiting: Gemini free tier allows 15 requests per minute
+const DELAY_BETWEEN_REQUESTS_MS = 5000; // 5 seconds = ~12 requests per minute (safe margin)
+
+function delay(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 async function embedTexts(texts: string[]) {
   // Prefer Gemini/Google embeddings if endpoint/key provided, otherwise fall back to OpenAI
@@ -18,66 +23,47 @@ async function embedTexts(texts: string[]) {
 
   if (geminiKey && geminiEndpoint) {
     // Gemini API uses API key as query parameter, not Bearer token
-    const urlWithKey = `${geminiEndpoint}?key=${geminiKey}`;
+    // Note: Gemini embedding API processes one text at a time, so we batch them with rate limiting
+    const embeddings: number[][] = [];
     
-    const res = await fetch(urlWithKey, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        content: {
-          parts: [{ text: texts.join('\n') }]
-        }
-      }),
-    });
+    for (let i = 0; i < texts.length; i++) {
+      const text = texts[i];
+      const urlWithKey = `${geminiEndpoint}?key=${geminiKey}`;
+      
+      // Add delay between requests to respect rate limits (except for first request)
+      if (i > 0) {
+        await delay(DELAY_BETWEEN_REQUESTS_MS);
+      }
+      
+      const res = await fetch(urlWithKey, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          content: {
+            parts: [{ text }]
+          }
+        }),
+      });
 
-    if (!res.ok) {
-      const txt = await res.text();
-      throw new Error(`Gemini embedding API failed: ${txt}`);
-    }
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error(`Gemini embedding API failed: ${txt}`);
+      }
 
-    const j = await res.json();
+      const j = await res.json();
 
-    // Gemini API returns: { embedding: { values: [...] } }
-    if (j?.embedding?.values && Array.isArray(j.embedding.values)) {
-      // Return array of embeddings for each text (currently combined, may need batch processing)
-      return [j.embedding.values as number[]];
+      // Gemini API returns: { embedding: { values: [...] } }
+      if (j?.embedding?.values && Array.isArray(j.embedding.values)) {
+        embeddings.push(j.embedding.values as number[]);
+        console.log(`Embedded ${i + 1}/${texts.length} texts`);
+      } else {
+        throw new Error('Gemini embedding API returned an unexpected response shape');
+      }
     }
     
-    // Support multiple response shapes (best-effort):
-    // - { data: [{ embedding: [...] }, ...] } (OpenAI-like)
-    // - { embeddings: [[...], ...] }
-    // - { data: [{ embeddings: [...] }]} or other variants
-    if (Array.isArray(j?.data) && j.data.length && Array.isArray(j.data[0]?.embedding)) {
-      return j.data.map((d: any) => d.embedding as number[]);
-    }
-    if (Array.isArray(j?.embeddings) && Array.isArray(j.embeddings[0])) {
-      return j.embeddings as number[][];
-    }
-    // Some Vertex/Generative APIs return { responses: [{ embedding: [...] }] }
-    if (Array.isArray(j?.responses) && Array.isArray(j.responses[0]?.embedding)) {
-      return j.responses.map((r: any) => r.embedding as number[]);
-    }
-
-    // As a last resort, try to find any array of numbers in the response
-    const found: number[][] = [];
-    const walk = (obj: any) => {
-      if (!obj) return;
-      if (Array.isArray(obj) && typeof obj[0] === 'number') {
-        found.push(obj as number[]);
-        return;
-      }
-      if (Array.isArray(obj)) {
-        for (const v of obj) walk(v);
-      } else if (typeof obj === 'object') {
-        for (const k of Object.keys(obj)) walk(obj[k]);
-      }
-    };
-    walk(j);
-    if (found.length >= texts.length) return found.slice(0, texts.length);
-
-    throw new Error('Gemini embedding API returned an unexpected response shape');
+    return embeddings;
   }
 
   // Should never reach here because we throw earlier if not configured
@@ -118,6 +104,7 @@ export async function POST(req: Request) {
     }
 
     // Embed incoming text. We will split into sentences to provide example matches.
+    // OPTIMIZATION: Limit sentences to reduce API calls and stay within rate limits
     const sentences = text
       .replace(/\r\n/g, " ")
       .replace(/\n/g, " ")
@@ -125,10 +112,16 @@ export async function POST(req: Request) {
       .map((s) => s.trim())
       .filter((s) => s.length > 10);
 
-    // fallback: if no sentences, treat whole text as one
-    const toEmbed = sentences.length ? sentences : [text];
+    // Limit to max 20 sentences to reduce API calls (was unlimited before)
+    // Free tier: 15 requests/min = we can do ~12 safely with delays
+    const MAX_SENTENCES = 20;
+    const limitedSentences = sentences.slice(0, MAX_SENTENCES);
 
-  const sentEmbeddings = await embedTexts(toEmbed);
+    // fallback: if no sentences, treat whole text as one
+    const toEmbed = limitedSentences.length ? limitedSentences : [text];
+
+    console.log(`Processing ${toEmbed.length} text segments (limited from ${sentences.length} total sentences)`);
+    const sentEmbeddings = await embedTexts(toEmbed);
 
     // compute best skill matches with example sentence
     const resultsMap: Record<string, { score: number; example: string }> = {};

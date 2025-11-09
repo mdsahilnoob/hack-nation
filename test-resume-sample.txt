@@ -1,0 +1,64 @@
+SAMPLE RESUME FOR TESTING
+
+John Doe
+Senior Full Stack Developer
+Email: john.doe@email.com | Phone: (555) 123-4567
+LinkedIn: linkedin.com/in/johndoe | GitHub: github.com/johndoe
+
+PROFESSIONAL SUMMARY
+Highly skilled Full Stack Developer with 6+ years of experience building scalable web applications and microservices. Proficient in modern JavaScript frameworks, cloud technologies, and agile methodologies. Strong problem-solving abilities with a track record of delivering high-quality software solutions.
+
+TECHNICAL SKILLS
+• Languages: Python, JavaScript, TypeScript, Java, C++, SQL
+• Frontend: React, Next.js, Vue.js, HTML5, CSS3, Tailwind CSS, Redux
+• Backend: Node.js, Express, Django, Flask, FastAPI, REST API, GraphQL
+• Databases: PostgreSQL, MongoDB, Redis, MySQL, Elasticsearch
+• Cloud & DevOps: AWS (EC2, S3, Lambda), Docker, Kubernetes, Jenkins, CI/CD, Terraform
+• Data Science: Machine Learning, TensorFlow, PyTorch, Pandas, NumPy, scikit-learn
+• Tools: Git, GitHub Actions, Jest, Cypress, Figma, VS Code
+
+PROFESSIONAL EXPERIENCE
+
+Senior Software Engineer | Tech Solutions Inc. | Jan 2021 - Present
+• Led development of a microservices-based e-commerce platform using Node.js, React, and AWS, handling 100K+ daily users
+• Implemented CI/CD pipelines with GitHub Actions and Docker, reducing deployment time by 70%
+• Architected and deployed scalable REST APIs using Express and GraphQL with PostgreSQL and Redis caching
+• Mentored team of 5 junior developers, conducting code reviews and promoting best practices
+• Optimized application performance through load balancing, caching strategies, and database query optimization
+• Integrated machine learning models for product recommendations using TensorFlow and Python
+
+Full Stack Developer | Innovation Labs | Jun 2018 - Dec 2020
+• Built responsive web applications using React, Redux, and TypeScript with modern UI/UX design principles
+• Developed backend services with Django and Flask, implementing authentication using JWT and OAuth
+• Managed PostgreSQL and MongoDB databases, ensuring data integrity and optimal performance
+• Collaborated with cross-functional teams using Agile and Scrum methodologies
+• Created comprehensive unit and integration tests using Jest and Pytest
+• Deployed applications to AWS using EC2, S3, and CloudFormation
+
+PROJECTS
+
+AI-Powered ChatBot | Personal Project
+• Developed an intelligent chatbot using Python, Natural Language Processing, and GPT models
+• Implemented deep learning neural networks with PyTorch for intent classification
+• Created RESTful API with FastAPI and deployed on AWS Lambda with serverless architecture
+• Built interactive frontend with React and integrated real-time WebSocket communication
+
+E-Commerce Analytics Dashboard | Freelance
+• Designed and developed data visualization dashboard using React, D3.js, and Plotly
+• Processed big data using Apache Spark and stored insights in Elasticsearch
+• Implemented ETL pipelines for data analysis using Pandas and NumPy
+• Created responsive UI with Tailwind CSS and Material-UI components
+
+EDUCATION
+Bachelor of Science in Computer Science | University of Technology | 2014 - 2018
+• Relevant Coursework: Data Structures, Algorithms, Database Systems, Computer Networks, Software Engineering
+
+CERTIFICATIONS
+• AWS Certified Solutions Architect - Associate
+• Kubernetes Administrator (CKA)
+• Machine Learning Specialization - Coursera
+
+ACHIEVEMENTS
+• Winner of company hackathon for developing innovative monitoring solution using Datadog
+• Contributed to open-source projects on GitHub with 500+ stars
+• Published technical articles on Medium about system design and performance optimization
