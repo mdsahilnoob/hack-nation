@@ -2,21 +2,9 @@ import { NextResponse } from "next/server";
 
 type RequestBody = { text: string; threshold?: number };
 
-// Use Gemini's generative model to extract skills directly from text
+// Use Flask backend (Groq LLM) to analyze resume and extract skills
 async function extractSkillsWithAI(text: string) {
-  const geminiKey = process.env.GEMINI_API_KEY;
-  
-  if (!geminiKey) {
-    throw new Error('GEMINI_API_KEY must be set');
-  }
-
-  // Use Gemini 2.0 Flash (latest free tier model)
-  // v1beta API compatible models:
-  // - 'gemini-2.0-flash-exp' (latest experimental, fastest)
-  // - 'gemini-1.5-flash' (stable fallback)
-  // - 'gemini-pro' (legacy fallback)
-  const modelName = 'gemini-2.0-flash-exp'; // Latest Gemini 2.0, Free tier: 15 RPM, 1500 RPD
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${geminiKey}`;
+  const flaskBackendUrl = process.env.FLASK_BACKEND_URL || 'http://127.0.0.1:5000';
   
   const prompt = `Analyze the following resume/profile text and extract ALL technical skills, soft skills, technologies, frameworks, tools, and methodologies mentioned.
 
@@ -53,39 +41,31 @@ Extract all skills mentioned, including:
 
 Return only the JSON array, nothing else.`;
 
-  const res = await fetch(url, {
+  // Send text analysis request to Flask backend
+  const res = await fetch(`${flaskBackendUrl}/analyze-text`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      contents: [{
-        parts: [{ text: prompt }]
-      }],
-      generationConfig: {
-        temperature: 0.1,
-        maxOutputTokens: 8192,
-      }
+    body: JSON.stringify({ 
+      text: text,
+      prompt: prompt
     }),
   });
 
   if (!res.ok) {
     const txt = await res.text();
-    throw new Error(`Gemini API failed: ${txt}`);
+    throw new Error(`Flask backend failed: ${txt}`);
   }
 
   const result = await res.json();
   
-  // Extract the generated text
-  const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
-  
-  if (!generatedText) {
-    throw new Error('No response from Gemini AI');
+  if (!result.analysis) {
+    throw new Error('No response from Flask backend');
   }
 
-  // Parse the JSON response
-  // Remove markdown code blocks if present
-  let cleanedText = generatedText.trim();
+  // Parse the JSON response from LLM
+  let cleanedText = result.analysis.trim();
   cleanedText = cleanedText.replace(/```json\n?/g, '').replace(/```\n?/g, '');
   cleanedText = cleanedText.trim();
   
@@ -108,14 +88,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ skills: [] });
     }
 
-    const geminiKey = process.env.GEMINI_API_KEY;
-    if (!geminiKey) {
-      return new NextResponse("GEMINI_API_KEY not set in environment", { status: 500 });
-    }
-
-    console.log('Extracting skills from resume using Gemini AI...');
+    const flaskBackendUrl = process.env.FLASK_BACKEND_URL || 'http://127.0.0.1:5000';
+    console.log('Extracting skills from resume using Flask backend (Groq LLM)...');
+    console.log('Flask backend URL:', flaskBackendUrl);
     
-    // Extract skills directly from the resume text using AI
+    // Extract skills directly from the resume text using Flask backend
     const extractedSkills = await extractSkillsWithAI(text);
     
     // Filter by threshold and sort by score
@@ -134,6 +111,9 @@ export async function POST(req: Request) {
         : typeof err === "string"
         ? err
         : "Unknown error";
-    return new NextResponse(message, { status: 500 });
+    return NextResponse.json(
+      { error: message, details: err instanceof Error ? err.stack : undefined },
+      { status: 500 }
+    );
   }
 }

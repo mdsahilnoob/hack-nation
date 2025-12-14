@@ -1,0 +1,4 @@
+{
+  "text": "Software Engineer with 5+ years experience in Python, JavaScript, React, Node.js, Docker, and AWS. Led teams using Agile methodologies.",
+  "prompt": "Analyze the following resume text and extract ALL skills. Return ONLY a valid JSON array with format: [{\"skill\": \"Python\", \"score\": 0.95, \"example\": \"context\"}]"
+}

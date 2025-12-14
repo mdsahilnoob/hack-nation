@@ -10,8 +10,50 @@ app = Flask(__name__)
 def home():
     return jsonify({
         "message": "🚀 Resume Hidden Talent Analyzer is running!",
-        "usage": "Send a POST request to /analyze with a PDF file."
+        "endpoints": {
+            "/analyze": "POST with PDF file - Analyzes resume PDF and finds hidden talents",
+            "/analyze-text": "POST with JSON {text, prompt} - Analyzes text with custom prompt"
+        }
     })
+
+
+@app.route("/analyze-text", methods=["POST"])
+def analyze_text():
+    """Analyze text directly with a custom prompt using Groq LLM"""
+    try:
+        data = request.get_json()
+        
+        if not data or "text" not in data:
+            return jsonify({"error": "Missing 'text' field in request body"}), 400
+        
+        text = data.get("text", "").strip()
+        custom_prompt = data.get("prompt", "").strip()
+        
+        if not text:
+            return jsonify({"error": "Text cannot be empty"}), 400
+        
+        # Initialize Groq LLM
+        llm = ChatGroq(
+            groq_api_key=os.getenv("Grok_API_KEY"),
+            model_name="llama-3.3-70b-versatile",
+            temperature=0.2,
+            max_tokens=2048,
+        )
+        
+        # If custom prompt provided, use it directly (it should already contain the text)
+        # Otherwise, create a default prompt
+        if custom_prompt:
+            final_prompt = custom_prompt
+        else:
+            final_prompt = f"Analyze the following text:\n\n{text}"
+        
+        # Get LLM response
+        response = llm.invoke([HumanMessage(content=final_prompt)])
+        
+        return jsonify({"analysis": response.content}), 200
+        
+    except Exception as e:
+        return jsonify({"error": f"❌ Error during analysis: {str(e)}"}), 500
 
 
 @app.route("/analyze", methods=["POST"])

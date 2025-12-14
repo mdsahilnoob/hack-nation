@@ -26,8 +26,8 @@ export default function UploadBox() {
         body: JSON.stringify({ text, threshold })
       });
       if (!res.ok) {
-        const txt = await res.text();
-        throw new Error(txt || "API error");
+        const data = await res.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(data.error || `API error: ${res.status}`);
       }
       const data = await res.json();
       setResults(data.skills);
